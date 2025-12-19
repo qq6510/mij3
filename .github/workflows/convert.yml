@@ -1,11 +1,42 @@
-      - name: Extract Clean Domains
+name: convert
+
+on:
+  schedule:
+    - cron: '0 7,15 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  convert:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download Sources
         run: |
-          # 假设你的 JSON 数据保存在 reward.txt 中
-          # 运行脚本生成 domains.txt
+          # 下载原始数据
+          curl -fsSL -o reward.txt https://edge.microsoft.com/abusiveadblocking/api/v1/blocklist
+          if [ -n "${{ secrets.ALL_SOURCE }}" ]; then
+            curl -fsSL -o all.txt "${{ secrets.ALL_SOURCE }}"
+          fi
+
+      - name: Extract Domains
+        run: |
+          # 确保脚本目录存在，防止报错
+          mkdir -p scripts
+          # 运行 Python 脚本提取并生成 Adblock 格式
           python3 scripts/extract.py reward.txt domains.txt
+          if [ -f all.txt ]; then
+            python3 scripts/extract.py all.txt all_domains.txt
+          fi
 
       - name: Check for Changes & Commit
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          commit_message: "Auto-update: Extracted Adblock domains [$(date +'%Y-%m-%d %H:%M')]"
-          file_pattern: "domains.txt"
+          commit_message: "Auto-update: Adblock rules [$(date +'%Y-%m-%d %H:%M')]"
+          file_pattern: "*.txt"
