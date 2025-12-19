@@ -16,20 +16,19 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          ref: main
 
       - name: Download Sources
         run: |
-          # 下载原始数据
           curl -fsSL -o reward.txt https://edge.microsoft.com/abusiveadblocking/api/v1/blocklist
           if [ -n "${{ secrets.ALL_SOURCE }}" ]; then
             curl -fsSL -o all.txt "${{ secrets.ALL_SOURCE }}"
           fi
 
-      - name: Extract Domains
+      - name: Extract to Adblock Format
         run: |
-          # 确保脚本目录存在，防止报错
           mkdir -p scripts
-          # 运行 Python 脚本提取并生成 Adblock 格式
+          # 确保脚本存在并运行转换逻辑
           python3 scripts/extract.py reward.txt domains.txt
           if [ -f all.txt ]; then
             python3 scripts/extract.py all.txt all_domains.txt
@@ -40,3 +39,4 @@ jobs:
         with:
           commit_message: "Auto-update: Adblock rules [$(date +'%Y-%m-%d %H:%M')]"
           file_pattern: "*.txt"
+          branch: main
