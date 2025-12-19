@@ -1,36 +1,21 @@
-import sys
-import re
-import os
+import sys, re, os
 
-def extract_to_adblock(input_file, output_file):
-    if not os.path.exists(input_file):
-        print(f"错误: 找不到输入文件 {input_file}")
-        return
-
+def extract(input_p, output_p):
+    if not os.path.exists(input_p): return
+    with open(input_p, 'r', encoding='utf-8') as f:
+        # 正则匹配 JSON 中的 url 字段内容
+        urls = re.findall(r'"url"\s*:\s*"([^"]+)"', f.read())
+    
     domains = set()
-    # 正则表达式：匹配 "url":"..." 括号里的网址
-    url_pattern = re.compile(r'"url"\s*:\s*"([^"]+)"')
-
-    with open(input_file, 'r', encoding='utf-8') as f:
-        content = f.read()
-        matches = url_pattern.findall(content)
+    for u in urls:
+        # 提取域名：去掉协议和路径
+        d = u.split('://')[-1].split('/')[0].strip().lower()
+        if d: domains.add(d)
         
-        for item in matches:
-            # 提取域名：去掉 http(s):// 和路径
-            domain = item.split('://')[-1].split('/')[0]
-            clean_domain = domain.strip().lower()
-            if clean_domain:
-                domains.add(clean_domain)
-
-    # 写入 Adblock 格式 (||domain.com^)
-    with open(output_file, 'w', encoding='utf-8') as f:
-        f.write("! Title: My Custom Adblock List\n")
-        f.write(f"! Total Count: {len(domains)}\n\n")
+    with open(output_p, 'w', encoding='utf-8') as f:
+        f.write("! Title: Adblock List\n")
         for d in sorted(list(domains)):
             f.write(f"||{d}^\n")
 
 if __name__ == "__main__":
-    if len(sys.argv) < 3:
-        print("用法: python3 extract.py <输入文件> <输出文件>")
-    else:
-        extract_to_adblock(sys.argv[1], sys.argv[2])
+    if len(sys.argv) >= 3: extract(sys.argv[1], sys.argv[2])
