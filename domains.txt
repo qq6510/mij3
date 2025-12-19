@@ -1,5 +1,5 @@
-! Title: My Custom Adblock List
-! Total Count: 3998
+! Title: Adblock Custom List
+! Total: 3998
 
 ||0044789.com^
 ||009banca.com^
