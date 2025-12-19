@@ -26,8 +26,7 @@ jobs:
 
       - name: 下载 reward.txt 和 all.txt
         run: |
-          curl -s -o reward.txt https://raw.githubusercontent.com/lingeringsound/10007_auto/refs/heads/master/reward
-          curl -s -o all.txt https://raw.githubusercontent.com/lingeringsound/10007_auto/refs/heads/master/all
+          curl -s -o reward.txt https://edge.microsoft.com/abusiveadblocking/api/v1/blocklist
 
       - name: 生成当前文件的 MD5 值
         id: generate_md5
