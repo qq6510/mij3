@@ -2,46 +2,36 @@ name: convert
 
 on:
   schedule:
-    - cron: '0 7,15 * * *'
-  workflow_dispatch:
+    - [span_7](start_span)cron: '0 7,15 * * *'[span_7](end_span)
+  [span_8](start_span)workflow_dispatch:[span_8](end_span)
 
 jobs:
   convert:
-    runs-on: ubuntu-latest
+    [span_9](start_span)runs-on: ubuntu-latest[span_9](end_span)
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        [span_10](start_span)uses: actions/checkout@v4[span_10](end_span)
         with:
-          fetch-depth: 0
+          [span_11](start_span)fetch-depth: 0[span_11](end_span)
 
       - name: Download Sources
         run: |
-          # 下载文件
-          curl -fsSL -o reward.txt https://edge.microsoft.com/abusiveadblocking/api/v1/blocklist
-          if [ -n "${{ secrets.ALL_SOURCE }}" ]; then
-            curl -fsSL -o all.txt "${{ secrets.ALL_SOURCE }}"
+          # [span_12](start_span)下载文件[span_12](end_span)
+          [span_13](start_span)curl -fsSL -o reward.txt https://edge.microsoft.com/abusiveadblocking/api/v1/blocklist[span_13](end_span)
+          [span_14](start_span)if [ -n "${{ secrets.ALL_SOURCE }}" ]; then[span_14](end_span)
+            [span_15](start_span)curl -fsSL -o all.txt "${{ secrets.ALL_SOURCE }}"[span_15](end_span)
+          [span_16](start_span)fi[span_16](end_span)
+
+      - name: Generate Adblock Lists
+        run: |
+          # [span_17](start_span)使用 Python 脚本处理转换[span_17](end_span)
+          [span_18](start_span)python3 scripts/extract.py reward.txt adblock_reward.txt[span_18](end_span)
+          if [ -f all.txt ]; then
+            python3 scripts/extract.py all.txt adblock_all.txt
           fi
 
-      - name: Convert to YAML (Clash/Sing-box style)
-        run: |
-          generate_yaml() {
-            local input=$1
-            local output="${input%.txt}.yaml"
-            echo "payload:" > "$output"
-            # 提取域名并转换为 YAML 格式
-            grep -vE '^#|^$|^\[' "$input" | awk '{print $2}' | sed '/^$/d' | sort -u | awk '{print "  - DOMAIN," $0}' >> "$output"
-          }
-          [ -f reward.txt ] && generate_yaml reward.txt
-          [ -f all.txt ] && generate_yaml all.txt
-
-      - name: Extract Clean Domains
-        run: |
-          # 运行我们存放在 scripts 文件夹里的脚本
-          python3 scripts/extract.py reward.txt domains.txt
-
       - name: Check for Changes & Commit
-        uses: stefanzweifel/git-auto-commit-action@v5
+        [span_19](start_span)uses: stefanzweifel/git-auto-commit-action@v5[span_19](end_span)
         with:
-          commit_message: "Auto-update: Hosts and Domain list [$(date +'%Y-%m-%d %H:%M')]"
-          file_pattern: "*.txt *.yaml"
-          # 如果文件没有变化，Action 会自动跳过，无需手动写 if env.NEED_UPDATE
+          [span_20](start_span)commit_message: "Auto-update: Adblock format lists [$(date +'%Y-%m-%d %H:%M')]"[span_20](end_span)
+          [span_21](start_span)file_pattern: "*.txt"[span_21](end_span)
