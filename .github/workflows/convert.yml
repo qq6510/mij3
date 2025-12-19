@@ -1,4 +1,4 @@
-name: Convert Hosts Files
+name: convert
 
 on:
   schedule:
