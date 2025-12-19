@@ -1,63 +1,39 @@
 import sys
-import re
-import ipaddress
+import os
 
-def clean_domain(text):
-    # 移除 Adblock 前缀和后缀
-    text = re.sub(r'^\|\|', '', text)
-    text = re.sub(r'^\|', '', text)
-    text = re.sub(r'\^.*$', '', text)
-    # 移除 URL 协议和路径
-    text = re.sub(r'^https?://', '', text)
-    text = re.sub(r'/.*$', '', text)
-    # 移除端口
-    text = re.sub(r':\d+$', '', text)
-    return text.strip().lower()
+def generate_adblock_list(input_file, output_file):
+    if not os.path.exists(input_file):
+        print(f"Error: {input_file} not found.")
+        return
 
-def is_valid_domain(domain):
-    if not domain or len(domain) > 253:
-        return False
-    if domain == "localhost":
-        return False
-    # 排除 IP 地址
-    try:
-        ipaddress.ip_address(domain)
-        return False
-    except:
-        pass
-    # 基本域名正则
-    pattern = r'^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9][a-z0-9-]{0,61}[a-z0-9]$'
-    return re.match(pattern, domain) is not None
-
-def process(input_file, output_file):
     domains = set()
-    try:
-        with open(input_file, 'r', encoding='utf-8') as f:
-            for line in f:
-                line = line.split('#')[0].strip()
-                if not line: continue
-                
-                parts = line.split()
-                # 处理 Hosts 格式 (0.0.0.0 example.com)
-                if len(parts) >= 2 and re.match(r'^\d', parts[0]):
-                    raw_domain = parts[1]
-                else:
-                    raw_domain = parts[0]
-                
-                domain = clean_domain(raw_domain)
-                domain = re.sub(r'^www\.', '', domain)
-                
-                if is_valid_domain(domain):
-                    domains.add(domain)
-                    
-        with open(output_file, 'w', encoding='utf-8') as f:
-            for d in sorted(domains):
-                f.write(f"{d}\n")
-        print(f"Success: {len(domains)} domains saved to {output_file}")
-    except Exception as e:
-        print(f"Error: {e}")
+    
+    with open(input_file, 'r', encoding='utf-8') as f:
+        for line in f:
+            line = line.strip()
+            # [span_1](start_span)跳过注释、空行或以 [ 开头的行[span_1](end_span)
+            if not line or line.startswith('#') or line.startswith('['):
+                continue
+            
+            # [span_2](start_span)提取域名：通常在第二列[span_2](end_span)
+            parts = line.split()
+            domain = parts[1] if len(parts) >= 2 else parts[0]
+            
+            # [span_3](start_span)清洗域名并存入集合去重[span_3](end_span)
+            clean_domain = domain.strip().lower()
+            if clean_domain:
+                domains.add(clean_domain)
+
+    # [span_4](start_span)写入文件，转换为 ||domain.com^ 格式[span_4](end_span)
+    with open(output_file, 'w', encoding='utf-8') as f:
+        f.write("! Title: Adblock List\n")
+        f.write(f"! Last Updated: {os.popen('date').read()}")
+        f.write("!\n")
+        for domain in sorted(list(domains)):
+            f.write(f"||{domain}^\n")
 
 if __name__ == "__main__":
-    inf = sys.argv[1] if len(sys.argv) > 1 else "reward.txt"
-    outf = sys.argv[2] if len(sys.argv) > 2 else "domains.txt"
-    process(inf, outf)
+    if len(sys.argv) < 3:
+        print("Usage: python3 extract.py <input_file> <output_file>")
+    else:
+        generate_adblock_list(sys.argv[1], sys.argv[2])
