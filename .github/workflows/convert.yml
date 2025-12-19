@@ -16,7 +16,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          ref: main
+          ref: main # 显式指定主分支
 
       - name: Download Sources
         run: |
@@ -28,7 +28,7 @@ jobs:
       - name: Extract to Adblock Format
         run: |
           mkdir -p scripts
-          # 确保脚本存在并运行转换逻辑
+          # 运行 Python 脚本进行 JSON 提取和 Adblock 转换
           python3 scripts/extract.py reward.txt domains.txt
           if [ -f all.txt ]; then
             python3 scripts/extract.py all.txt all_domains.txt
@@ -39,4 +39,4 @@ jobs:
         with:
           commit_message: "Auto-update: Adblock rules [$(date +'%Y-%m-%d %H:%M')]"
           file_pattern: "*.txt"
-          branch: main
+          branch: main # 确保推送到正确的分支
