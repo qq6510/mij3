@@ -2,7 +2,7 @@ name: convert
 
 on:
   schedule:
-    - cron: '0 15 * * *'
+    - cron: '11 15 * * *'
   workflow_dispatch:
 
 permissions:
